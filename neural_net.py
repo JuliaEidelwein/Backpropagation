@@ -32,4 +32,5 @@ class Neuron:
     def __init__(self, weights):
         self.bias = weights[0]
         self.weights = weights[1:]
+        self.activation = None
 
