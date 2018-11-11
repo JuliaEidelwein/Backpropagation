@@ -27,10 +27,25 @@ def network_weights(filename):
 def sigmoid(x):
     return 1 / (1 + math.exp(-x))
 
+def create_network(nodes_per_layer, weights):
+    network = []
+    for l in range(1, len(nodes_per_layer)):
+        layer = []
+        for n in range(nodes_per_layer[l]):
+            layer.append(Neuron(weights[l-1][n]))
+        network.append(layer)
+    return network
+
+# def propagate(instance, nodes_per_layer, weights):
+#     for instance
 
 class Neuron:
-    def __init__(self, weights):
-        self.bias = weights[0]
-        self.weights = weights[1:]
-        self.activation = None
+    def __init__(self, weights = None, activation = None):
+        if(weights):
+            self.bias = weights[0]
+            self.weights = weights[1:]
+        else:
+            self.bias = None
+            self.weights = None
+        self.activation = activation
 

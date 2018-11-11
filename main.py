@@ -56,3 +56,7 @@ if __name__ == '__main__':
     normalizedDataset, maxV, minV = normalize_dataset(dataset)
     print(normalizedDataset)
 
+
+    network = nn.create_network(nodes_per_layer,weights)
+    print(network)
+
