@@ -18,12 +18,12 @@ def network_config(filename):
     retorna o parâmetro de regularização (lambda), e uma lista contendo o
     número de neurônios em cada camada.
     '''
-    with open(filename) as file:
+    with open(filename, 'r') as file:
         regularization_parameter = float(next(file))
         nodes_per_layer = []
         for line in file:
             nodes_per_layer.append(int(line))
-        return (regularization_parameter, nodes_per_layer)
+    return (regularization_parameter, nodes_per_layer)
 
 
 def network_weights(filename):
@@ -33,7 +33,7 @@ def network_weights(filename):
     neurônios.
     '''
     initial_weights = []
-    with open(filename) as file:
+    with open(filename, 'r') as file:
         for line in file:
             layer_w = []
             for substring in line.split(';'):
@@ -49,12 +49,10 @@ def parse_instances(filename):
     Retorna uma lista contendo essas isntâncias (que são tuplas).
     '''
     dataset = []
-    with open(filename) as file:
+    with open(filename, 'r') as file:
         next(file)  # Pula a linha com cabeçalhos.
         for line in file:
-            data_string, result_string = line.split(';')
-            data = tuple((float(s) for s in data_string.split(',')))
-            result = [float(s) for s in result_string.split(',')]
+            data, result = [list(map(float, part.split(','))) for part in line.split(';')]
             dataset.append(Instance(data=data, result=result))
     return dataset
 
@@ -79,25 +77,6 @@ def normalize_dataset(dataset):
     return (normalized_dataset, max_vs, min_vs)
 
 
-
-# def normalize_dataset(D):
-#     maxV = []
-#     minV = []
-#     for attr in range(len(D[0][0])):
-#         maxV.append(max(D[i][0][attr] for i in range(len(D))))
-#         minV.append(min(D[i][0][attr] for i in range(len(D))))
-#     normalizedDataset = []
-#     for instance in D:
-#         normalizedAttr = []
-#         for attr in range(len(instance[0])):
-#             normalizedAttr.append(
-#                 (((instance[0][attr] - minV[attr])*2)/(maxV[attr] - minV[attr])) - 1)
-#         normalizedDataset.append((normalizedAttr, instance[1]))
-#     print(maxV)
-#     print(minV)
-#     return normalizedDataset, minV, maxV
-
-
 if __name__ == '__main__':
 
     if len(sys.argv) < 4:
@@ -114,16 +93,18 @@ if __name__ == '__main__':
     dataset = parse_instances(dataset_filename)
     normalized_dataset, max_values, min_values = normalize_dataset(dataset)
 
+    print('>> Lambda: ', reg_param, end="\n\n"),
+    print('>> Nodos por camada: ', nodes_per_layer, end="\n\n")
     print('>> Pesos iniciais lidos: ', weights, end="\n\n")
     print('>> Dados lidos', dataset, end="\n\n")
     print('>> Dados normalizados', normalized_dataset, end="\n\n")
 
     layer_weights = nn.initialize_weights_as_matrix(weights, nodes_per_layer)
 
-    n = 0
+    n = 0  # Número da saída que estamos analisando
     z, activations = nn.propagate(layer_weights, dataset[n + 0], nodes_per_layer)
     errors = nn.J(activations[-1], dataset[n + 0].result)
-    print(f">> Saída predita para o exemplo {n+1}: ", activations[-1])
-    print(f">> Valor experado para o exemplo {n+1}: ", dataset[n + 0].result)
-    print(">> Erros obtidos:", errors)
-    print(nn.sigmoid(np.asarray([1, 2, 3])))
+    print(f">> Saída predita para o exemplo {n+1}: ", activations[-1], end="\n\n")
+    print(f">> Valor experado para o exemplo {n+1}: ", dataset[n + 0].result, end="\n\n")
+    print(">> Erros obtidos:", errors, end="\n\n")
+    print(nn.sigmoid(np.asarray([1, 2, 3])), end="\n\n")

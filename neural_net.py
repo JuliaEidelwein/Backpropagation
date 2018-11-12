@@ -3,7 +3,7 @@ import math
 
 
 def sigmoid(fx):
-    return 1 / (1 + math.exp(-fx))
+    return 1 / (1 + np.exp(-fx))
 
 
 def create_network(nodes_per_layer, weights):
