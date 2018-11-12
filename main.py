@@ -9,6 +9,8 @@
 import sys
 from collections import namedtuple
 
+import numpy as np
+
 import neural_net as nn
 
 def parse_instances(filename):
@@ -18,7 +20,7 @@ def parse_instances(filename):
         for line in file:
             substring = line.split(';')
             data = tuple((float(s) for s in substring[0].split(',')))
-            result =  tuple((float(s) for s in substring[1].split(',')))
+            result = [float(s) for s in substring[1].split(',')]
             dataset.append((data,result))
     return dataset
 
@@ -57,6 +59,11 @@ if __name__ == '__main__':
     print(normalizedDataset)
 
 
-    network = nn.create_network(nodes_per_layer,weights)
-    print(network)
+    # network = nn.create_network(nodes_per_layer,weights)
+    layerWeights = nn.initialize_weights_as_matrix(weights,nodes_per_layer)
 
+    #nn.propagate(layerWeights,normalizedDataset[0],nodes_per_layer)
+    z, activations = nn.propagate(layerWeights, dataset[0], nodes_per_layer)
+    j = nn.J(activations[-1], dataset[0][1])
+    print(j)
+    print(nn.sigmoid(np.asarray([1, 2, 3])))
