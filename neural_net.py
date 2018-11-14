@@ -116,16 +116,9 @@ def J(outputs, expected_outputs):
 def outputDelta(outputs, expected_outputs):
     return [expected - out for expected,out in zip(expected_outputs, outputs)]
 
-def innerDelta(deltas, weights, activations, numOfNodes):
-    # for node in range(numOfNodes):
-    #     deltaSum = 0
-    #     for w in weights[node]:
-    #         deltaSum = deltaSum + w*deltas[]
-
+def innerDelta(deltas, weights, activations):
     deltaSum = np.transpose(weights)*np.transpose(np.asmatrix(deltas))
     activations = np.concatenate((np.array([1]), activations), axis=None)
-    # deltaSum = np.dot(np.dot(deltaSum,(np.asmatrix(activations))),np.transpose(np.asmatrix(1-activations)))
-    # deltaSum = np.transpose(deltaSum)*np.transpose(np.asmatrix(activations))
     deltaSum = [x * y for x, y in zip(deltaSum, activations)]
     deltaSum = [x * y for x, y in zip(deltaSum, (1-activations))]
     return deltaSum
@@ -139,13 +132,14 @@ def backpropagation(layer_weights, input, nodes_per_layer):
     numOfLayers = len(nodes_per_layer)
     for layer in range(numOfLayers-2,-1,-1):
         if(layer == 0):
-            layer_deltas = innerDelta(layer_deltas,layer_weights[layer],input[0],nodes_per_layer[layer])
+            layer_deltas = innerDelta(layer_deltas,layer_weights[layer],input[0])
         else:
-            layer_deltas = innerDelta(layer_deltas,layer_weights[layer],activations[layer-1],nodes_per_layer[layer])
+            layer_deltas = innerDelta(layer_deltas,layer_weights[layer],activations[layer-1])
         print(layer_deltas)
         layer_deltas.pop(0)
-        #layer_deltas = [np.asarray(x) for x in layer_deltas]
         layer_deltas = [x.item(0) for x in layer_deltas]
         print(layer_deltas)
         deltas.append(layer_deltas)
+    # D = []
     # for layer in range(numOfLayers - 1, -1, -1):
+    #     D[] = D[] + layer_deltas[]*activations[]
