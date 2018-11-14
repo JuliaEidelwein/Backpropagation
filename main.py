@@ -33,3 +33,5 @@ print(">> Saída predita para o exemplo:", activations[-1], end="\n\n")
 print(">> Valor experado para o exemplo:", instance.result, end="\n\n")
 print(">> Erros obtidos:", errors, end="\n\n")
 print(nn.sigmoid(numpy.asarray([1, 2, 3])), end="\n\n")
+
+nn.backpropagation(weights, dataset[0], nodes_per_layer)
