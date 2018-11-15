@@ -114,7 +114,7 @@ def J(outputs, expected_outputs):
 
 
 def outputDelta(outputs, expected_outputs):
-    return [expected - out for expected,out in zip(expected_outputs, outputs)]
+    return [out - expected for expected,out in zip(expected_outputs, outputs)]
 
 def innerDelta(deltas, weights, activations):
     deltaSum = np.transpose(weights)*np.transpose(np.asmatrix(deltas))
@@ -123,23 +123,39 @@ def innerDelta(deltas, weights, activations):
     deltaSum = [x * y for x, y in zip(deltaSum, (1-activations))]
     return deltaSum
 
-def backpropagation(layer_weights, input, nodes_per_layer):
-    z, activations = propagate(layer_weights,input)
-    outerDeltas = outputDelta(activations[-1],np.asarray(input[-1]))
-    deltas = []
-    deltas.append(outerDeltas)
-    layer_deltas = outerDeltas
-    numOfLayers = len(nodes_per_layer)
-    for layer in range(numOfLayers-2,-1,-1):
-        if(layer == 0):
-            layer_deltas = innerDelta(layer_deltas,layer_weights[layer],input[0])
-        else:
-            layer_deltas = innerDelta(layer_deltas,layer_weights[layer],activations[layer-1])
-        print(layer_deltas)
-        layer_deltas.pop(0)
-        layer_deltas = [x.item(0) for x in layer_deltas]
-        print(layer_deltas)
-        deltas.append(layer_deltas)
+def backpropagation(layer_weights, inputs, nodes_per_layer):
     # D = []
-    # for layer in range(numOfLayers - 1, -1, -1):
-    #     D[] = D[] + layer_deltas[]*activations[]
+    # for l in range(len(nodes_per_layer)
+    for input in inputs:
+        z, activations = propagate(layer_weights,input)
+        outerDeltas = outputDelta(activations[-1],np.asarray(input[-1]))
+        print(outerDeltas)
+        deltas = []
+        deltas.append(outerDeltas)
+        layer_deltas = outerDeltas
+        numOfLayers = len(nodes_per_layer)
+        for layer in range(numOfLayers-2,0,-1):
+            if(layer == 0):
+                layer_deltas = innerDelta(layer_deltas,layer_weights[layer],input[0])
+            else:
+                layer_deltas = innerDelta(layer_deltas,layer_weights[layer],activations[layer-1])
+            print(layer_deltas)
+            layer_deltas.pop(0)
+            layer_deltas = [x.item(0) for x in layer_deltas]
+            # layer_deltas[0] = deltas[numOfLayers - 2 - layer][0]
+            print(layer_deltas)
+            deltas.append(layer_deltas)
+        D = []
+        inputC = np.concatenate((np.array([1]), input[0]), axis=None)
+        for layer in range(numOfLayers - 2, -1, -1):
+            activations[layer-1] = np.concatenate((np.array([1]), activations[layer-1]), axis=None)
+        # #     D[] = D[] + layer_deltas[]*activations[]
+            if(layer==0):
+                D.append(np.transpose(np.asmatrix(deltas[numOfLayers-2]))*np.asmatrix(inputC))
+            else:
+                teste1 = np.asmatrix(activations[layer-1])
+                teste2 = np.asmatrix(deltas[numOfLayers - 2 - layer])
+                # deltas[numOfLayers - 2 - layer] = deltas[numOfLayers - 3 - layer][0]
+                # D.append(activations[layer-1]*deltas[numOfLayers - 2 - layer])
+                D.append(np.transpose(np.asmatrix(deltas[numOfLayers - 2 - layer]))*np.asmatrix(activations[layer - 1]))
+        print(D)

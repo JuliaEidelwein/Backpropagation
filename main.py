@@ -13,7 +13,8 @@ if len(sys.argv) < 4:
 reg_param, nodes_per_layer = nn.network_config(sys.argv[1])
 weights = nn.network_weights(sys.argv[2])
 dataset = nn.parse_instances(sys.argv[3])
-normalized_dataset, max_values, min_values = nn.normalize_dataset(dataset)
+# normalized_dataset, max_values, min_values = nn.normalize_dataset(dataset)
+normalized_dataset = dataset
 
 print('>> Lambda: ', reg_param, end="\n\n"),
 print('>> Nodos por camada: ', nodes_per_layer, end="\n\n")
@@ -34,4 +35,4 @@ print(">> Valor experado para o exemplo:", instance.result, end="\n\n")
 print(">> Erros obtidos:", errors, end="\n\n")
 print(nn.sigmoid(numpy.asarray([1, 2, 3])), end="\n\n")
 
-nn.backpropagation(weights, dataset[0], nodes_per_layer)
+nn.backpropagation(weights, dataset, nodes_per_layer)
