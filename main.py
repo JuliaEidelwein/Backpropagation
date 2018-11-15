@@ -35,4 +35,4 @@ print(">> Valor experado para o exemplo:", instance.result, end="\n\n")
 print(">> Erros obtidos:", errors, end="\n\n")
 print(nn.sigmoid(numpy.asarray([1, 2, 3])), end="\n\n")
 
-nn.backpropagation(weights, dataset, nodes_per_layer, reg_param)
+nn.backpropagation(weights, dataset, nodes_per_layer, reg_param, 0.7)

@@ -123,7 +123,7 @@ def innerDelta(deltas, weights, activations):
     deltaSum = [x * y for x, y in zip(deltaSum, (1-activations))]
     return deltaSum
 
-def backpropagation(layer_weights, inputs, nodes_per_layer, reg_param):
+def backpropagation(layer_weights, inputs, nodes_per_layer, reg_param, alpha):
     D = []
     for l in layer_weights:
         D.append(np.asmatrix([np.zeros(n.size) for n in l]))
@@ -131,7 +131,6 @@ def backpropagation(layer_weights, inputs, nodes_per_layer, reg_param):
     for input in inputs:
         z, activations = propagate(layer_weights,input)
         outerDeltas = outputDelta(activations[-1],np.asarray(input[-1]))
-        print(outerDeltas)
         deltas = []
         deltas.append(outerDeltas)
         layer_deltas = outerDeltas
@@ -141,26 +140,28 @@ def backpropagation(layer_weights, inputs, nodes_per_layer, reg_param):
                 layer_deltas = innerDelta(layer_deltas,layer_weights[layer],input[0])
             else:
                 layer_deltas = innerDelta(layer_deltas,layer_weights[layer],activations[layer-1])
-            print(layer_deltas)
             layer_deltas.pop(0)
             layer_deltas = [x.item(0) for x in layer_deltas]
-            # layer_deltas[0] = deltas[numOfLayers - 2 - layer][0]
-            print(layer_deltas)
             deltas.append(layer_deltas)
         inputC = np.concatenate((np.array([1]), input[0]), axis=None)
         for layer in range(numOfLayers - 2, -1, -1):
             activations[layer-1] = np.concatenate((np.array([1]), activations[layer-1]), axis=None)
             if(layer==0):
-                teste =  np.transpose(np.asmatrix(deltas[numOfLayers-2]))*np.asmatrix(inputC)
                 D[layer] = D[layer] + np.transpose(np.asmatrix(deltas[numOfLayers-2]))*np.asmatrix(inputC)
-                # D.append(np.transpose(np.asmatrix(deltas[numOfLayers-2]))*np.asmatrix(inputC))
             else:
-                teste = np.transpose(np.asmatrix(deltas[numOfLayers - 2 - layer]))*np.asmatrix(activations[layer - 1])
-                # D.append(np.transpose(np.asmatrix(deltas[numOfLayers - 2 - layer]))*np.asmatrix(activations[layer - 1]))
                 D[layer] = D[layer] + np.transpose(np.asmatrix(deltas[numOfLayers - 2 - layer]))*np.asmatrix(activations[layer - 1])
-        print(D)
     n = len(inputs)
     for layer in range(numOfLayers - 2, -1, -1):
         P = reg_param*layer_weights[layer]
         D[layer] = (1/n)*(D[layer]+P)
-        print(D)
+    for layer in range(numOfLayers - 2, -1, -1):
+        layer_weights[layer] = layer_weights[layer] - alpha*D[layer]
+
+
+
+def numerical_gradient_estimation(epsilon, inputs, layer_weights):
+    for layer in range(len(layer_weights)):
+        for weight in range(len(layer)):
+            layer_weights_temp = layer_weights
+            layer_weights_temp[layer][weight] = layer_weights_temp[layer][weight] + epsilon
+            propagate(layer_weights_temp,)
