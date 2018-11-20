@@ -162,21 +162,23 @@ class Network:
     def update_gradients(self, deltas, activations):
         if self.gradients is None:
             self.gradients = []
-            for l in self.layers:
-                self.gradients.append(np.asmatrix([np.zeros(n.size) for n in l]))
+            for i in range(len(self.layers)):
+                self.gradients.append(np.asmatrix(np.zeros((len(self.deltas[i]),len(self.activations[i])))))
         numOfLayers = len(self.layers)
         for layer in range(numOfLayers - 1, -1, -1):
             if(layer==0):
                 print(np.transpose(np.asmatrix(deltas[0]))*np.asmatrix(activations[0]))
                 self.gradients[layer] = self.gradients[layer] + np.transpose(np.asmatrix(deltas[0]))*np.asmatrix(activations[0])
             else:
-                print(np.transpose(np.asmatrix(deltas[numOfLayers - layer]))*np.asmatrix(activations[layer]))
-                self.gradients[layer] = self.gradients[layer] + np.transpose(np.asmatrix(deltas[numOfLayers - layer]))*np.asmatrix(activations[layer])
+                print(np.transpose(np.asmatrix(deltas[layer]))*np.asmatrix(activations[layer+1]))
+                self.gradients[layer] = self.gradients[layer] + np.transpose(np.asmatrix(deltas[layer]))*(np.asmatrix(activations[layer]))
 
     def calculate_regularized_gradients(self, n):
         print(f'Lambda: {self.reg_param}')
         for k in range(len(self.layers)):
             pk = self.reg_param * self.layers[k]
+            for l in pk:
+                l[0] = 0
             # TODO: Não que n é esse.
             g = (1/n) * (self.gradients[k] + pk)
             self.gradients[k] = g
