@@ -90,7 +90,7 @@ class Network:
         self.activations = []
         self.gradients = None
         self.deltas = []
-        self.n = 0
+        # self.n = 0
 
     def sigmoid(self, fx):
         return 1 / (1 + np.exp(-fx))
@@ -98,26 +98,37 @@ class Network:
     def sigmoid_derivative(self, s):
         return s * (1 - s)
 
-    def train(self, instance):
-        self.n += 1
-        z, activations = self.activate(instance.data)
-        output = activations[-1][1:]
-        deltas = self.calculate_deltas(instance.result, activations)
-        self.update_gradients(deltas, activations)
-        gradients = self.calculate_regularized_gradients()
-        # self.update_weights()
+    def train(self, instances):
+        n = len(instances)
+        # self.n += 1
+        for instance in instances:
+            z, activations = self.activate(instance.data)
+            output = activations[-1][1:]
+            deltas = self.calculate_deltas(instance.result, activations)
+            self.update_gradients(deltas, activations)
+            # gradients = self.calculate_regularized_gradients()
+            # self.update_weights()
 
-        for i, d in enumerate(deltas):
-            print(f'Delta {i}')
-            print(d)
-        for i, a in enumerate(activations):
-            print(f'Activation {i}')
-            print(a[1:])
-        for i, w in enumerate(self.layers):
-            print(f'Weights {i}')
-            print(w)
+            for i, d in enumerate(deltas):
+                print(f'Delta {i}')
+                print(d)
+            for i, a in enumerate(activations):
+                print(f'Activation {i}')
+                print(a[1:])
+            for i, w in enumerate(self.layers):
+                print(f'Weights {i}')
+                print(w)
 
-        # Não consigo o mesmo resultado
+            # # Não consigo o mesmo resultado
+            # for i, g in enumerate(gradients):
+            #     print(f'Gradiente {i}')
+            #     print(g)
+
+            # Não consigo o mesmo resultado
+            for i, g in enumerate(self.gradients):
+                print(f'Gradiente {i}')
+                print(g)
+        gradients = self.calculate_regularized_gradients(n)
         for i, g in enumerate(gradients):
             print(f'Gradiente {i}')
             print(g)
@@ -156,16 +167,18 @@ class Network:
         numOfLayers = len(self.layers)
         for layer in range(numOfLayers - 1, -1, -1):
             if(layer==0):
+                print(np.transpose(np.asmatrix(deltas[0]))*np.asmatrix(activations[0]))
                 self.gradients[layer] = self.gradients[layer] + np.transpose(np.asmatrix(deltas[0]))*np.asmatrix(activations[0])
             else:
+                print(np.transpose(np.asmatrix(deltas[numOfLayers - layer]))*np.asmatrix(activations[layer]))
                 self.gradients[layer] = self.gradients[layer] + np.transpose(np.asmatrix(deltas[numOfLayers - layer]))*np.asmatrix(activations[layer])
 
-    def calculate_regularized_gradients(self):
+    def calculate_regularized_gradients(self, n):
         print(f'Lambda: {self.reg_param}')
         for k in range(len(self.layers)):
             pk = self.reg_param * self.layers[k]
             # TODO: Não que n é esse.
-            g = (1/self.n) * (self.gradients[k] + pk)
+            g = (1/n) * (self.gradients[k] + pk)
             self.gradients[k] = g
         return self.gradients
 

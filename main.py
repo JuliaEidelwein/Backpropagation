@@ -18,4 +18,4 @@ instance = dataset[0]
 net = nn.Network(weights, reg_param)
 
 # Este método está imprimindo as coisas por enquanto.
-net.train(instance)
+net.train(dataset)
