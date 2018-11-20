@@ -90,7 +90,7 @@ class Network:
         self.activations = []
         self.gradients = None
         self.deltas = []
-        self.n = 1
+        self.n = 0
 
     def sigmoid(self, fx):
         return 1 / (1 + np.exp(-fx))
@@ -150,10 +150,19 @@ class Network:
 
     def update_gradients(self, deltas, activations):
         if self.gradients is None:
-            self.gradients = [d.dot(a[1:].T) for d, a in zip(deltas, activations[1:])]
-        else:
-            for k, (d, a) in enumerate(zip(deltas, activations)):
-                self.gradients[k] = self.gradients[k] + d.dot(a[1:].T)
+            # self.gradients = [d.dot(a[1:].T) for d, a in zip(deltas, activations[1:])]
+            self.gradients = []
+            for l in self.layers:
+                self.gradients.append(np.asmatrix([np.zeros(n.size) for n in l]))
+        # else:
+        numOfLayers = len(self.layers)
+        for layer in range(numOfLayers - 2, -1, -1):
+            if(layer==0):
+                self.gradients[layer] = self.gradients[layer] + np.transpose(np.asmatrix(deltas[numOfLayers-2]))*np.asmatrix(activations[0])
+            else:
+                self.gradients[layer] = self.gradients[layer] + np.transpose(np.asmatrix(deltas[numOfLayers - 2 - layer]))*np.asmatrix(activations[layer - 1])
+        # for k, (d, a) in enumerate(zip(deltas, activations)):
+        #     self.gradients[k] = self.gradients[k] + d.dot(a[1:].T)
 
     def calculate_regularized_gradients(self):
         print(f'Lambda: {self.reg_param}')
