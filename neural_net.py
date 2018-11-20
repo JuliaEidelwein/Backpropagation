@@ -84,13 +84,12 @@ def normalize_dataset(dataset):
 class Network:
     def __init__(self, weights, reg_param):
         # TODO: Não sei onde está definido o alpha
-        self.alpha = 1.5
+        self.alpha = 0.9
         self.reg_param = reg_param
         self.layers = [np.array(w) for w in weights]
         self.activations = []
         self.gradients = None
         self.deltas = []
-        # self.n = 0
 
     def sigmoid(self, fx):
         return 1 / (1 + np.exp(-fx))
@@ -100,14 +99,12 @@ class Network:
 
     def train(self, instances):
         n = len(instances)
-        # self.n += 1
         for instance in instances:
             z, activations = self.activate(instance.data)
             output = activations[-1][1:]
+            jCost = self.cost(instance[1],output)
             deltas = self.calculate_deltas(instance.result, activations)
             self.update_gradients(deltas, activations)
-            # gradients = self.calculate_regularized_gradients()
-            # self.update_weights()
 
             for i, d in enumerate(deltas):
                 print(f'Delta {i}')
@@ -119,12 +116,6 @@ class Network:
                 print(f'Weights {i}')
                 print(w)
 
-            # # Não consigo o mesmo resultado
-            # for i, g in enumerate(gradients):
-            #     print(f'Gradiente {i}')
-            #     print(g)
-
-            # Não consigo o mesmo resultado
             for i, g in enumerate(self.gradients):
                 print(f'Gradiente {i}')
                 print(g)
@@ -132,6 +123,11 @@ class Network:
         for i, g in enumerate(gradients):
             print(f'Gradiente {i}')
             print(g)
+        print("J!!!!!!!!!!!!")
+        print(self.J(instances))
+        self.update_weights()
+        print(self.J(instances))
+
 
     def activate(self, values):
         zs = []
@@ -179,14 +175,13 @@ class Network:
             pk = self.reg_param * self.layers[k]
             for l in pk:
                 l[0] = 0
-            # TODO: Não que n é esse.
             g = (1/n) * (self.gradients[k] + pk)
             self.gradients[k] = g
         return self.gradients
 
     def update_weights(self):
         for i in range(len(self.layers)):
-            self.layers[i] = self.layers[i] - (self.alpha * self.gradients[i])
+            self.layers[i] = np.asarray(self.layers[i] - (self.alpha * self.gradients[i]))
 
     def _cost(self, y, fx):
         return -y * ln(fx) - (1 - y) * ln(1 - fx)
@@ -197,3 +192,26 @@ class Network:
         '''
         return sum(self._cost(y, fx) for y, fx in zip(expected_output, output))
 
+    def J(self, instances):
+        j = 0
+        nInstances = len(instances)
+        for instance in instances:
+            z, activations = self.activate(instance.data)
+            output = activations[-1][1:]
+            j = j + self.cost(instance[1],output)
+        j = j/nInstances
+        S = self.calculateS(nInstances)
+        return j+S
+
+
+    def calculateS(self, n):
+        S = 0
+        for layer in self.layers:
+            for ne in layer:
+                for w in range(len(ne)):
+                    if w == 0:
+                        S = S
+                    else:
+                        S = S + ne[w]*ne[w]
+        S = (self.reg_param/(2*n))*S
+        return S
