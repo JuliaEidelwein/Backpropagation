@@ -5,7 +5,7 @@ import numpy as np
 
 # Representa as instâncias lidas do dataset.
 # "data" é a lista de valores de todos os atributos.
-# "result" é a lista de valores experados na saída da rede.
+# "result" é a lista de valores esperados na saída da rede.
 class Instance(namedtuple('BasicInstance', ('data', 'result'))):
     def __repr__(self):
         data = ', '.join(map(str, self.data))
@@ -36,21 +36,21 @@ def network_weights(filename):
     Retorna uma lista contendo matrizes de pesos.  Cada matriz corresponde
     aos pesos de umas das camadas da rede.
     '''
-    initial_weights = []
+    weights = []
     with open(filename, 'r') as file:
         for line in file:
             layer_w = []
             for substring in line.split(';'):
                 neuron_w = tuple((float(s) for s in substring.split(',')))
                 layer_w.append(neuron_w)
-            initial_weights.append(layer_w)
-    return [np.matrix(w) for w in initial_weights]
+            weights.append(layer_w)
+    return weights
 
 
 def parse_instances(filename):
     '''
     Lê um arquivo e carrega as instâncias de treinamento definidas nele.
-    Retorna uma lista contendo essas isntâncias (que são tuplas).
+    Retorna uma lista contendo essas instâncias (que são tuplas).
     '''
     dataset = []
     with open(filename, 'r') as file:
@@ -64,7 +64,7 @@ def parse_instances(filename):
 
 def normalize_dataset(dataset):
     '''
-    Normalisa cada atributo de cada instância no dataset e retorna uma nova
+    Normaliza cada atributo de cada instância no dataset e retorna uma nova
     lista de instâncias com valores normalizados entre -1 e 1.
     '''
     max_vs = []
@@ -81,87 +81,99 @@ def normalize_dataset(dataset):
     return (normalized_dataset, max_vs, min_vs)
 
 
-def sigmoid(fx):
-    return 1 / (1 + np.exp(-fx))
+class Network:
+    def __init__(self, weights, reg_param):
+        # TODO: Não sei onde está definido o alpha
+        self.alpha = 1.5
+        self.reg_param = reg_param
+        self.layers = [np.array(w) for w in weights]
+        self.activations = []
+        self.gradients = None
+        self.deltas = []
+        self.n = 1
 
+    def sigmoid(self, fx):
+        return 1 / (1 + np.exp(-fx))
 
-def propagate(weights, instance):
-    z = []
-    activations = []
-    bias_value = np.array([1])
-    current_activation = np.asarray(instance.data)
-    for w_i in weights:
-        value = np.dot(w_i, np.concatenate((bias_value, current_activation)))
-        z.append(value)
-        current_activation = sigmoid(value).A1
-        activations.append(current_activation)
-    return z, activations
+    def sigmoid_derivative(self, s):
+        return s * (1 - s)
 
+    def train(self, instance):
+        self.n += 1
+        z, activations = self.activate(instance.data)
+        output = activations[-1][1:]
+        deltas = self.calculate_deltas(instance.result, activations)
+        self.update_gradients(deltas, activations)
+        gradients = self.calculate_regularized_gradients()
+        # self.update_weights()
 
-def calculate_cost(y, fx):
-    '''
-    Calcula o erro entre o valor esperado "y" e o valor obtido "f(x)".
-    '''
-    return -y * ln(fx) - (1 - y) * ln(1 - fx)
+        for i, d in enumerate(deltas):
+            print(f'Delta {i}')
+            print(d)
+        for i, a in enumerate(activations):
+            print(f'Activation {i}')
+            print(a[1:])
+        for i, w in enumerate(self.layers):
+            print(f'Weights {i}')
+            print(w)
 
+        # Não consigo o mesmo resultado
+        for i, g in enumerate(gradients):
+            print(f'Gradiente {i}')
+            print(g)
 
-def J(outputs, expected_outputs):
-    '''
-    Recebe uma lista de resultados e uma lista de valores esperados.
-    Retorna uma lista com os valores dos erros das entradas.
-    '''
-    return [calculate_cost(y, fx) for y, fx in zip(expected_outputs, outputs)]
+    def activate(self, values):
+        zs = []
+        self.activations = [np.array((1,) + values)]
+        for thetas in self.layers:
+            # Insere 1 na matriz
+            values = np.insert(values, 0, 1, axis=0)
+            z = thetas.dot(values.T)
+            zs.append(z)
+            a = self.sigmoid(z)
+            values = a
+            a = np.insert(a, 0, 1, axis=0)
+            self.activations.append(a)
+        return (zs, self.activations)
 
+    def calculate_deltas(self, expected, activations):
+        fx = activations[-1][1:]
+        d = fx - expected
+        self.deltas = [d]
+        n = len(self.layers) - 1
+        for w, a in zip(reversed(self.layers[1:]), reversed(activations[1:-1])):
+            d = w.T.dot(d) * self.sigmoid_derivative(a)
+            d = d[1:] # Remove o delta associado ao viés da camada
+            self.deltas.append(d)
+        self.deltas.reverse()
+        return self.deltas
 
-def outputDelta(outputs, expected_outputs):
-    return [out - expected for expected,out in zip(expected_outputs, outputs)]
+    def update_gradients(self, deltas, activations):
+        if self.gradients is None:
+            self.gradients = [d.dot(a[1:].T) for d, a in zip(deltas, activations[1:])]
+        else:
+            for k, (d, a) in enumerate(zip(deltas, activations)):
+                self.gradients[k] = self.gradients[k] + d.dot(a[1:].T)
 
-def innerDelta(deltas, weights, activations):
-    deltaSum = np.transpose(weights)*np.transpose(np.asmatrix(deltas))
-    activations = np.concatenate((np.array([1]), activations), axis=None)
-    deltaSum = [x * y for x, y in zip(deltaSum, activations)]
-    deltaSum = [x * y for x, y in zip(deltaSum, (1-activations))]
-    return deltaSum
+    def calculate_regularized_gradients(self):
+        print(f'Lambda: {self.reg_param}')
+        for k in range(len(self.layers)):
+            pk = self.reg_param * self.layers[k]
+            # TODO: Não que n é esse.
+            g = (1/self.n) * (self.gradients[k] + pk)
+            self.gradients[k] = g
+        return self.gradients
 
-def backpropagation(layer_weights, inputs, nodes_per_layer, reg_param, alpha):
-    D = []
-    for l in layer_weights:
-        D.append(np.asmatrix([np.zeros(n.size) for n in l]))
-    # D = [np.zeros(y.size) for x,y in layer_weights]
-    for input in inputs:
-        z, activations = propagate(layer_weights,input)
-        outerDeltas = outputDelta(activations[-1],np.asarray(input[-1]))
-        deltas = []
-        deltas.append(outerDeltas)
-        layer_deltas = outerDeltas
-        numOfLayers = len(nodes_per_layer)
-        for layer in range(numOfLayers-2,0,-1):
-            if(layer == 0):
-                layer_deltas = innerDelta(layer_deltas,layer_weights[layer],input[0])
-            else:
-                layer_deltas = innerDelta(layer_deltas,layer_weights[layer],activations[layer-1])
-            layer_deltas.pop(0)
-            layer_deltas = [x.item(0) for x in layer_deltas]
-            deltas.append(layer_deltas)
-        inputC = np.concatenate((np.array([1]), input[0]), axis=None)
-        for layer in range(numOfLayers - 2, -1, -1):
-            activations[layer-1] = np.concatenate((np.array([1]), activations[layer-1]), axis=None)
-            if(layer==0):
-                D[layer] = D[layer] + np.transpose(np.asmatrix(deltas[numOfLayers-2]))*np.asmatrix(inputC)
-            else:
-                D[layer] = D[layer] + np.transpose(np.asmatrix(deltas[numOfLayers - 2 - layer]))*np.asmatrix(activations[layer - 1])
-    n = len(inputs)
-    for layer in range(numOfLayers - 2, -1, -1):
-        P = reg_param*layer_weights[layer]
-        D[layer] = (1/n)*(D[layer]+P)
-    for layer in range(numOfLayers - 2, -1, -1):
-        layer_weights[layer] = layer_weights[layer] - alpha*D[layer]
+    def update_weights(self):
+        for i in range(len(self.layers)):
+            self.layers[i] = self.layers[i] - (self.alpha * self.gradients[i])
 
+    def _cost(self, y, fx):
+        return -y * ln(fx) - (1 - y) * ln(1 - fx)
 
+    def cost(self, expected_output, output):
+        '''
+        Calcula o J da ativação
+        '''
+        return sum(self._cost(y, fx) for y, fx in zip(expected_output, output))
 
-def numerical_gradient_estimation(epsilon, inputs, layer_weights):
-    for layer in range(len(layer_weights)):
-        for weight in range(len(layer)):
-            layer_weights_temp = layer_weights
-            layer_weights_temp[layer][weight] = layer_weights_temp[layer][weight] + epsilon
-            propagate(layer_weights_temp,)
