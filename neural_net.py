@@ -99,11 +99,10 @@ class Network:
         return s * (1 - s)
 
     def train(self, instances):
+        #TODO: loop over this to improve network until stop criteria
         n = len(instances)
         for instance in instances:
             z, activations = self.activate(instance.data)
-            output = activations[-1][1:]
-            jCost = self.cost(instance[1],output)
             deltas = self.calculate_deltas(instance.result, activations)
             self.update_gradients(deltas, activations)
 
@@ -125,11 +124,14 @@ class Network:
             print(f'Gradiente {i}')
             print(g)
         print("J!!!!!!!!!!!!")
-        print(self.J(instances))
-        print(self.numerical_gradient_estimation(0.000001, instances))
+        j = self.J(instances)
+        print(j)
+        numGrads = self.numerical_gradient_estimation(0.000001, instances)
+        print(numGrads)
+        #TODO: calculate error
         self.update_weights()
-        print(self.J(instances))
-
+        j = self.J(instances)
+        print(j)
 
     def activate(self, values):
         zs = []
