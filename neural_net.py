@@ -126,7 +126,7 @@ class Network:
             print(g)
         print("J!!!!!!!!!!!!")
         print(self.J(instances))
-        self.numerical_gradient_estimation(0.000001, instances)
+        print(self.numerical_gradient_estimation(0.000001, instances))
         self.update_weights()
         print(self.J(instances))
 
@@ -219,14 +219,25 @@ class Network:
         return S
 
     def numerical_gradient_estimation(self, epsilon, inputs):
+        gradients = []
         e1 = copy.deepcopy(self)
-        # for layer in e1.layers:
-        #     for n in range(len(layer)):
-        #         layer[n][0] = layer[n][0] + epsilon
-        e1.layers[0][0][0] = e1.layers[0][0][0] + epsilon
-        j1 = e1.J(inputs)
-        e1.layers[0][0][0] = e1.layers[0][0][0] - 2*epsilon
-        j2 = e1.J(inputs)
-        print(j1)
-        print(j2)
-        return (j1-j2)/(2*epsilon)
+        for layer in e1.layers:
+            l = []
+            for n in layer:
+                w = []
+                for weight in range(len(n)):
+                    n[weight] = n[weight] + epsilon
+                    j1 = e1.J(inputs)
+                    n[weight] = n[weight] -2*epsilon
+                    j2 = e1.J(inputs)
+                    w.append((j1-j2)/(2*epsilon))
+                l.append(w)
+            gradients.append(l)
+        return gradients
+        # e1.layers[0][0][0] = e1.layers[0][0][0] + epsilon
+        # j1 = e1.J(inputs)
+        # e1.layers[0][0][0] = e1.layers[0][0][0] - 2*epsilon
+        # j2 = e1.J(inputs)
+        # print(j1)
+        # print(j2)
+        # return (j1-j2)/(2*epsilon)
