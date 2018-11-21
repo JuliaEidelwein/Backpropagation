@@ -232,12 +232,5 @@ class Network:
                     j2 = e1.J(inputs)
                     w.append((j1-j2)/(2*epsilon))
                 l.append(w)
-            gradients.append(l)
+            gradients.append(np.asmatrix(l))
         return gradients
-        # e1.layers[0][0][0] = e1.layers[0][0][0] + epsilon
-        # j1 = e1.J(inputs)
-        # e1.layers[0][0][0] = e1.layers[0][0][0] - 2*epsilon
-        # j2 = e1.J(inputs)
-        # print(j1)
-        # print(j2)
-        # return (j1-j2)/(2*epsilon)
