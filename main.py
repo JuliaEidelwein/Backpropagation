@@ -18,4 +18,6 @@ instance = dataset[0]
 net = nn.Network(weights, reg_param)
 
 # Este método está imprimindo as coisas por enquanto.
-net.train(dataset)
+# net.train(dataset)
+print(weights)
+print(nn.random_weights(nodes_per_layer))

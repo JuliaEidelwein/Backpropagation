@@ -2,7 +2,10 @@ from math import log as ln
 from collections import namedtuple
 import numpy as np
 import copy
+import random
 
+# Gerador de números aleatórios com semente.
+RANDOM = random.Random(123)
 
 # Representa as instâncias lidas do dataset.
 # "data" é a lista de valores de todos os atributos.
@@ -11,7 +14,7 @@ class Instance(namedtuple('BasicInstance', ('data', 'result'))):
     def __repr__(self):
         data = ', '.join(map(str, self.data))
         result = ', '.join(map(str, self.result))
-        return f'{{ data: ({data}), result: ({result}) }}'
+        return '{{ data: ({data}), result: ({result}) }}'.format(data=data, result=result)
 
 
 def network_config(filename):
@@ -82,6 +85,14 @@ def normalize_dataset(dataset):
     return (normalized_dataset, max_vs, min_vs)
 
 
+def random_weights(nodes_per_layer):
+    weights = []
+    for x, y in zip(nodes_per_layer[:-1], nodes_per_layer[1:]):
+        # (x + 1) para representar o bias do neurônio
+        weights.append([tuple(RANDOM.random() for _ in range(x + 1)) for _ in range(y)])
+    return weights
+
+
 class Network:
     def __init__(self, weights, reg_param):
         # TODO: Não sei onde está definido o alpha
@@ -107,21 +118,21 @@ class Network:
             self.update_gradients(deltas, activations)
 
             for i, d in enumerate(deltas):
-                print(f'Delta {i}')
+                print('Delta {i}'.format(i=i))
                 print(d)
             for i, a in enumerate(activations):
-                print(f'Activation {i}')
+                print('Activation {i}'.format(i=i))
                 print(a[1:])
             for i, w in enumerate(self.layers):
-                print(f'Weights {i}')
+                print('Weights {i}'.format(i=i))
                 print(w)
 
             for i, g in enumerate(self.gradients):
-                print(f'Gradiente {i}')
+                print('Gradiente {i}'.format(i=i))
                 print(g)
         gradients = self.calculate_regularized_gradients(n)
         for i, g in enumerate(gradients):
-            print(f'Gradiente {i}')
+            print('Gradiente {i}'.format(i=i))
             print(g)
         print("J!!!!!!!!!!!!")
         j = self.J(instances)
@@ -174,7 +185,7 @@ class Network:
                 self.gradients[layer] = self.gradients[layer] + np.transpose(np.asmatrix(deltas[layer]))*(np.asmatrix(activations[layer]))
 
     def calculate_regularized_gradients(self, n):
-        print(f'Lambda: {self.reg_param}')
+        print('Lambda: {reg_param}'.format(reg_param=self.reg_param))
         for k in range(len(self.layers)):
             pk = self.reg_param * self.layers[k]
             for l in pk:
