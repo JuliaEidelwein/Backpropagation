@@ -101,37 +101,46 @@ class Network:
     def train(self, instances):
         #TODO: loop over this to improve network until stop criteria
         n = len(instances)
-        for instance in instances:
-            z, activations = self.activate(instance.data)
-            deltas = self.calculate_deltas(instance.result, activations)
-            self.update_gradients(deltas, activations)
+        eps = 0.00000005
+        while True:
+            for instance in instances:
+                z, activations = self.activate(instance.data)
+                deltas = self.calculate_deltas(instance.result, activations)
+                self.update_gradients(deltas, activations)
 
-            for i, d in enumerate(deltas):
-                print(f'Delta {i}')
-                print(d)
-            for i, a in enumerate(activations):
-                print(f'Activation {i}')
-                print(a[1:])
-            for i, w in enumerate(self.layers):
-                print(f'Weights {i}')
-                print(w)
+                # for i, d in enumerate(deltas):
+                #     print(f'Delta {i}')
+                #     print(d)
+                # for i, a in enumerate(activations):
+                #     print(f'Activation {i}')
+                #     print(a[1:])
+                # for i, w in enumerate(self.layers):
+                #     print(f'Weights {i}')
+                #     print(w)
 
-            for i, g in enumerate(self.gradients):
-                print(f'Gradiente {i}')
-                print(g)
-        gradients = self.calculate_regularized_gradients(n)
-        for i, g in enumerate(gradients):
-            print(f'Gradiente {i}')
-            print(g)
-        print("J!!!!!!!!!!!!")
-        j = self.J(instances)
-        print(j)
-        numGrads = self.numerical_gradient_estimation(0.000001, instances)
-        print(numGrads)
-        #TODO: calculate error
-        self.update_weights()
-        j = self.J(instances)
-        print(j)
+                # for i, g in enumerate(self.gradients):
+                #     print(f'Gradiente {i}')
+                #     print(g)
+            before = self.J(instances)
+            gradients = self.calculate_regularized_gradients(n)
+            # for i, g in enumerate(gradients):
+                # print(f'Gradiente {i}')
+                # print(g)
+            # print("J!!!!!!!!!!!!")
+            j = self.J(instances)
+            # print(j)
+            numGrads = self.numerical_gradient_estimation(0.000001, instances)
+            # print(numGrads)
+            #TODO: calculate error
+            self.update_weights()
+            after = self.J(instances)
+            print(after)
+            if (before - after) <= eps:
+                break
+
+        print(instances[-1].result)
+        print(self.activations[-1])
+        
 
     def activate(self, values):
         zs = []
@@ -167,14 +176,14 @@ class Network:
         numOfLayers = len(self.layers)
         for layer in range(numOfLayers - 1, -1, -1):
             if(layer==0):
-                print(np.transpose(np.asmatrix(deltas[0]))*np.asmatrix(activations[0]))
+                # print(np.transpose(np.asmatrix(deltas[0]))*np.asmatrix(activations[0]))
                 self.gradients[layer] = self.gradients[layer] + np.transpose(np.asmatrix(deltas[0]))*np.asmatrix(activations[0])
             else:
-                print(np.transpose(np.asmatrix(deltas[layer]))*np.asmatrix(activations[layer+1]))
+                # print(np.transpose(np.asmatrix(deltas[layer]))*np.asmatrix(activations[layer+1]))
                 self.gradients[layer] = self.gradients[layer] + np.transpose(np.asmatrix(deltas[layer]))*(np.asmatrix(activations[layer]))
 
     def calculate_regularized_gradients(self, n):
-        print(f'Lambda: {self.reg_param}')
+        # print(f'Lambda: {self.reg_param}')
         for k in range(len(self.layers)):
             pk = self.reg_param * self.layers[k]
             for l in pk:
