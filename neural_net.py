@@ -2,7 +2,10 @@ from math import log as ln
 from collections import namedtuple
 import numpy as np
 import copy
+import random
 
+# Gerador de números aleatórios com semente.
+RANDOM = random.Random(123)
 
 # Representa as instâncias lidas do dataset.
 # "data" é a lista de valores de todos os atributos.
@@ -11,7 +14,7 @@ class Instance(namedtuple('BasicInstance', ('data', 'result'))):
     def __repr__(self):
         data = ', '.join(map(str, self.data))
         result = ', '.join(map(str, self.result))
-        return f'{{ data: ({data}), result: ({result}) }}'
+        return '{{ data: ({data}), result: ({result}) }}'.format(data=data, result=result)
 
 
 def network_config(filename):
@@ -81,7 +84,6 @@ def normalize_dataset(dataset):
         normalized_dataset.append(Instance(data=data, result=instance.result))
     return (normalized_dataset, max_vs, min_vs)
 
-
 class Network:
     def __init__(self, weights, reg_param):
         # TODO: Não sei onde está definido o alpha
@@ -137,10 +139,8 @@ class Network:
             print(after)
             if (before - after) <= eps:
                 break
-
         print(instances[-1].result)
         print(self.activations[-1])
-        
 
     def activate(self, values):
         zs = []
@@ -183,7 +183,7 @@ class Network:
                 self.gradients[layer] = self.gradients[layer] + np.transpose(np.asmatrix(deltas[layer]))*(np.asmatrix(activations[layer]))
 
     def calculate_regularized_gradients(self, n):
-        # print(f'Lambda: {self.reg_param}')
+        print('Lambda: {reg_param}'.format(reg_param=self.reg_param))
         for k in range(len(self.layers)):
             pk = self.reg_param * self.layers[k]
             for l in pk:
