@@ -6,6 +6,7 @@ Bootstrap = namedtuple('Bootsrap', ('training', 'test'))
 
 RANDOM = random.Random(123)
 
+
 def bootstrap(data, r=10):
     """
     Splits data D in r test and training sets with resampling
@@ -24,30 +25,31 @@ def bootstrap(data, r=10):
     return bootstrap_sets
 
 
-def stratifiedKFold(data, k=10):
+def stratified_k_fold(data, k=10):
     '''
     Splits data in k partitions, maintaining instances per class proportion in each fold
     '''
-    instancesPerClass = defaultdict(list)
+    instances_per_class = defaultdict(list)
 
     for instance in data:
-        instancesPerClass[instance[-1]].append(instance)
-    amountPerClass = defaultdict(list)
+        instances_per_class[instance.result].append(instance)
+    amount_per_class = defaultdict(list)
 
-    for c in instancesPerClass:
+    for c in instances_per_class:
         # Stores a integer number of instances per fold and the remainder of division by k
-        amountPerClass[c] = [len(instancesPerClass[c])//k, len(instancesPerClass[c]) % k]
+        amount_per_class[c] = [
+            len(instances_per_class[c]) // k, len(instances_per_class[c]) % k]
     folds = [[] for l in range(k)]
 
     for f in range(k):
-        for c in instancesPerClass:
+        for c in instances_per_class:
             # Distributes an equal amount of instances to each fold
-            for i in range(amountPerClass[c][0]):
-                folds[f].append(instancesPerClass[c].pop())
+            for _ in range(amount_per_class[c][0]):
+                folds[f].append(instances_per_class[c].pop())
             # And one spare instance to the first remainder of division by k folds
-            if amountPerClass[c][1] >= 1:
-                folds[f].append(instancesPerClass[c].pop())
-                amountPerClass[c][1] = amountPerClass[c][1] - 1
+            if amount_per_class[c][1] >= 1:
+                folds[f].append(instances_per_class[c].pop())
+                amount_per_class[c][1] = amount_per_class[c][1] - 1
     return folds
 
 
