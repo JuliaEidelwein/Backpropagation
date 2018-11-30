@@ -89,23 +89,8 @@ def normalize_dataset(dataset):
     for instance in dataset:
         data = tuple(2 * ((x - min_vs[index]) / (max_vs[index] - min_vs[index])) - 1
                      for index, x in enumerate(instance.data))
-        normalized_dataset.append(Instance(data=data, result=instance.result))
+        normalized_dataset.append(Instance(data=data, klass=instance.klass, result=instance.result))
     return (normalized_dataset, max_vs, min_vs)
-
-
-def make_sublists(instances, size=100):
-    sublists = []
-    i = 0
-    length = len(instances)
-    while i < length:
-        sub = []
-        counter = 0
-        while counter < size and i < length:
-            sub.append(instances[i])
-            i += 1
-            counter += 1
-        sublists.append(sub)
-    return sublists
 
 
 def error(numerical, backpropagation):
@@ -114,14 +99,14 @@ def error(numerical, backpropagation):
     return np.linalg.norm(numerical - backpropagation) / np.linalg.norm(numerical + backpropagation)
 
 
-# def chunks(array, size):
-    # for i in range(0, len(array), size):
-        # yield array[i:i + size]
+def chunks(array, size):
+    for i in range(0, len(array), size):
+        yield array[i:i + size]
 
 
 class Network:
     def __init__(self, weights, reg_param):
-        self.alpha = 0.7
+        self.alpha = 0.5
         self.reg_param = reg_param
         self.layers = [np.array(w) for w in weights]
         self.activations = []
@@ -134,11 +119,11 @@ class Network:
     def sigmoid_derivative(self, s):
         return s * (1 - s)
 
-    def train(self, instances, size=50):
+    def train(self, instances, size=100):
         # TODO: loop over this to improve network until stop criteria
         n = len(instances)
         # eps = 0.00000005
-        eps = 0.00000005
+        eps = 0.0005
         for _ in range(10000):
             for instance in instances:
                 z, activations = self.activate(instance.data)

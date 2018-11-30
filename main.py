@@ -14,8 +14,9 @@ if len(sys.argv) < 4:
 reg_param, nodes_per_layer = nn.network_config(sys.argv[1])
 weights = nn.network_weights(sys.argv[2])
 dataset = nn.parse_instances(sys.argv[3])
+dataset, max_value, min_value = nn.normalize_dataset(dataset)
 
-instance = dataset[1]
+# instance = dataset[1]
 
 
 validation = tt.cross_validation(weights, reg_param, dataset, k=10, r=10)
