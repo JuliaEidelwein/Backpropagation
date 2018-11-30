@@ -16,14 +16,18 @@ weights = nn.network_weights(sys.argv[2])
 dataset = nn.parse_instances(sys.argv[3])
 
 # instance = dataset[1]
-net = nn.Network(weights, reg_param)
 
-kfolds = tt.stratified_k_fold(dataset)
-for fold in kfolds:
-    net.train(fold)
-for instance in dataset:
-    z, a = net.activate(instance.data)
-    print(instance.result, a[-1][1:], sep="\n", end="\n\n")
+validation = tt.cross_validation(weights, reg_param, dataset, k=10, r=10)
+print(validation)
+
+# net = nn.Network(weights, reg_param)
+# kfolds = tt.stratified_k_fold(dataset)
+# for fold in kfolds:
+    # net.train(fold)
+# for instance in dataset:
+    # print(instance.klass)
+    # print(net.predict_class(instance))
+    # print()
 
 # Este método está imprimindo as coisas por enquanto.
 # net.train(dataset, 10)

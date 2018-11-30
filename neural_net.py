@@ -9,17 +9,16 @@ import random
 RANDOM = random.Random(123)
 
 
-class Instance(namedtuple('BasicInstance', ('data', 'result'))):
+class Instance(namedtuple('BasicInstance', ('data', 'klass', 'result'))):
     '''Representa as instâncias lidas do dataset.
 
     "data" é a lista de valores de todos os atributos.
     "result" é a lista de valores esperados na saída da rede.
     '''
-
     def __repr__(self):
         data = ', '.join(map(str, self.data))
         result = ', '.join(map(str, self.result))
-        return '{{ data: ({data}), result: ({result}) }}'.format(data=data, result=result)
+        return '{{ data: ({data}), klass: {self.klass} result: ({result}) }}'.format(data=data, result=result)
 
 
 def network_config(filename):
@@ -69,7 +68,9 @@ def parse_instances(filename):
         for line in file:
             data, result = [tuple(map(float, part.split(',')))
                             for part in line.split(';')]
-            dataset.append(Instance(data=data, result=result))
+            max_value = max(result)
+            klass = result.index(max_value)
+            dataset.append(Instance(data=data, klass=klass, result=result))
     return dataset
 
 
@@ -132,7 +133,7 @@ class Network:
         # TODO: loop over this to improve network until stop criteria
         n = len(instances)
         # eps = 0.00000005
-        eps = 0.0000000005
+        eps = 0.00005
         for _ in range(10000):
             for instance in instances:
                 z, activations = self.activate(instance.data)
@@ -261,3 +262,15 @@ class Network:
                 l.append(w)
             gradients.append(np.asmatrix(l))
         return gradients
+
+    def predict_class(self, instance):
+        '''Retorna a classes predita.
+        Dada uma instância, retorna o índice do maior valor da saída
+        da ativação nessa instância.  Esse índice representa a classe
+        predita para a instância.
+        '''
+        z, a = self.activate(instance.data)
+        output = a[-1][1:].tolist()  # Remove o input do viés
+        max_value = max(output)
+        return output.index(max_value)
+

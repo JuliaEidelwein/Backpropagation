@@ -1,6 +1,8 @@
 import random
 import math
 from collections import namedtuple, defaultdict
+from statistics import mean, stdev
+import neural_net as nn
 
 Bootstrap = namedtuple('Bootsrap', ('training', 'test'))
 
@@ -32,7 +34,7 @@ def stratified_k_fold(data, k=10):
     instances_per_class = defaultdict(list)
 
     for instance in data:
-        instances_per_class[instance.result].append(instance)
+        instances_per_class[instance.klass].append(instance)
     amount_per_class = defaultdict(list)
 
     for c in instances_per_class:
@@ -102,3 +104,42 @@ def f_measure(beta, tp, fp, fn):
 
     except ZeroDivisionError:
         return 0
+
+
+def get_classes(instances):
+    classes = {instance.klass for instance in instances}
+    return list(classes)
+
+
+def cross_validation(weights, reg_param, instances, k=10, r=10):
+    folds = stratified_k_fold(instances, k)
+    classes = get_classes(instances)
+    n_classes = len(classes)
+    confusion_matrix = nested_dict(n_classes)
+    fmeasures = []
+    for current_fold in folds:
+        for c1 in classes:
+            for c2 in classes:
+                confusion_matrix[c1][c2] = 0
+        training_data = []
+        for fold in folds:
+            if fold != current_fold:
+                for instance in fold:
+                    training_data.append(instance)
+
+        net = nn.Network(weights, reg_param)
+        # TODO: Resolver detalhes do treinamento
+        print("Treinando {n} instâncias".format(n=len(training_data)))
+        net.train(training_data)
+
+        for instance in current_fold:
+            prediction = net.predict_class(instance)
+            print('Decisão: ', prediction)
+            confusion_matrix[instance.klass][prediction] += 1
+
+        # TODO: Verificar se está certo isto.
+        tp, fp, fn = sum_tp_fp_fn(confusion_matrix)
+        fmeasures.append(f_measure(1, tp, fp, fn))
+
+    # Retorna a média e o desvio padrão das fmeasures
+    return (mean(fmeasures), stdev(fmeasures))
