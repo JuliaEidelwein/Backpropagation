@@ -39,7 +39,7 @@ def random_weights(nodes_per_layer):
     weights = []
     for x, y in zip(nodes_per_layer[:-1], nodes_per_layer[1:]):
         # (x + 1) para representar o bias do neurônio
-        weights.append([tuple(RANDOM.random()
+        weights.append([tuple(RANDOM.randint(1, 100) / 100
                               for _ in range(x + 1)) for _ in range(y)])
     return weights
 

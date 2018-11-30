@@ -15,14 +15,18 @@ reg_param, nodes_per_layer = nn.network_config(sys.argv[1])
 weights = nn.network_weights(sys.argv[2])
 dataset = nn.parse_instances(sys.argv[3])
 
-# instance = dataset[1]
+instance = dataset[1]
+
 
 validation = tt.cross_validation(weights, reg_param, dataset, k=10, r=10)
 print(validation)
 
 # net = nn.Network(weights, reg_param)
+# net.train([instance])
+# net.train(dataset)
 # kfolds = tt.stratified_k_fold(dataset)
 # for fold in kfolds:
+    # for instance
     # net.train(fold)
 # for instance in dataset:
     # print(instance.klass)

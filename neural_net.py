@@ -1,4 +1,4 @@
-from math import log as ln
+from math import log as ln, exp
 from collections import namedtuple
 from itertools import chain
 import numpy as np
@@ -18,7 +18,7 @@ class Instance(namedtuple('BasicInstance', ('data', 'klass', 'result'))):
     def __repr__(self):
         data = ', '.join(map(str, self.data))
         result = ', '.join(map(str, self.result))
-        return '{{ data: ({data}), klass: {self.klass} result: ({result}) }}'.format(data=data, result=result)
+        return '{{ data: ({data}), klass: {klass} result: ({result}) }}'.format(data=data, klass=self.klass, result=result)
 
 
 def network_config(filename):
@@ -114,9 +114,14 @@ def error(numerical, backpropagation):
     return np.linalg.norm(numerical - backpropagation) / np.linalg.norm(numerical + backpropagation)
 
 
+# def chunks(array, size):
+    # for i in range(0, len(array), size):
+        # yield array[i:i + size]
+
+
 class Network:
     def __init__(self, weights, reg_param):
-        self.alpha = 0.9
+        self.alpha = 0.7
         self.reg_param = reg_param
         self.layers = [np.array(w) for w in weights]
         self.activations = []
@@ -129,16 +134,15 @@ class Network:
     def sigmoid_derivative(self, s):
         return s * (1 - s)
 
-    def train(self, instances, size=100):
+    def train(self, instances, size=50):
         # TODO: loop over this to improve network until stop criteria
         n = len(instances)
         # eps = 0.00000005
-        eps = 0.00005
+        eps = 0.00000005
         for _ in range(10000):
             for instance in instances:
                 z, activations = self.activate(instance.data)
-                deltas = self.calculate_deltas(
-                    instance.result, activations)
+                deltas = self.calculate_deltas(instance.result, activations)
                 self.update_gradients(deltas, activations)
             before = self.J(instances)
             gradients = self.calculate_regularized_gradients(n)
@@ -149,22 +153,22 @@ class Network:
             after = self.J(instances)
             print(after)
             diff = abs(before - after)
+            # break
             if diff <= eps:
                 break
-
         # print(instances[-1].result)
         # print(self.activations[-1])
 
     def activate(self, values):
         zs = []
         self.activations = [np.array((1,) + values)]
-        for thetas in self.layers:
+        for i, layer in enumerate(self.layers):
             # Insere 1 na matriz
             values = np.insert(values, 0, 1, axis=0)
-            z = thetas.dot(values.T)
+            z = layer.dot(values.T)
             zs.append(z)
             a = self.sigmoid(z)
-            values = a
+            values = copy.copy(a)
             a = np.insert(a, 0, 1, axis=0)
             self.activations.append(a)
         return (zs, self.activations)
@@ -179,6 +183,9 @@ class Network:
             d = d[1:]  # Remove o delta associado ao viés da camada
             self.deltas.append(d)
         self.deltas.reverse()
+        # print("deltas")
+        # for d in self.deltas:
+            # print(d)
         return self.deltas
 
     def update_gradients(self, deltas, activations):
@@ -189,15 +196,14 @@ class Network:
                     np.zeros((len(self.deltas[i]), len(self.activations[i])))))
         num_of_layers = len(self.layers)
         for layer in range(num_of_layers - 1, -1, -1):
-            if(layer == 0):
-                # print(np.transpose(np.asmatrix(deltas[0]))*np.asmatrix(activations[0]))
-                self.gradients[layer] = self.gradients[layer] + \
-                    np.transpose(np.asmatrix(
-                        deltas[0]))*np.asmatrix(activations[0])
+            if layer is 0:
+                self.gradients[layer] = self.gradients[layer] + np.transpose(np.asmatrix(deltas[0]))*np.asmatrix(activations[0])
             else:
-                # print(np.transpose(np.asmatrix(deltas[layer]))*np.asmatrix(activations[layer+1]))
                 self.gradients[layer] = self.gradients[layer] + np.transpose(
                     np.asmatrix(deltas[layer]))*(np.asmatrix(activations[layer]))
+        # print('Gradientes')
+        # for g in self.gradients:
+            # print(g)
 
     def calculate_regularized_gradients(self, n):
         # print('Lambda: {reg_param}'.format(reg_param=self.reg_param))
@@ -207,12 +213,14 @@ class Network:
                 l[0] = 0
             g = (1/n) * (self.gradients[k] + pk)
             self.gradients[k] = g
-        return self.gradients
 
     def update_weights(self):
+        new_layers = []
         for i in range(len(self.layers)):
-            self.layers[i] = np.asarray(
-                self.layers[i] - (self.alpha * self.gradients[i]))
+            w = np.array(self.layers[i] - (self.alpha * self.gradients[i]))
+            # self.layers[i] = self.layers[i] - (self.alpha * self.gradients[i])
+            new_layers.append(copy.copy(w))
+        self.layers = new_layers
 
     def _cost(self, y, fx):
         return -y * ln(fx) - (1 - y) * ln(1 - fx)
@@ -232,19 +240,18 @@ class Network:
             j = j + self.cost(instance.result, output)
         j = j / n_instances
         S = self.calculate_s(n_instances)
+        print(j + S)
         return j + S
 
     def calculate_s(self, n):
-        S = 0
+        s = 0
         for layer in self.layers:
-            for ne in layer:
-                for w in range(len(ne)):
-                    if w is 0:
-                        S = S
-                    else:
-                        S = S + ne[w] * ne[w]
-        S = (self.reg_param / (2 * n)) * S
-        return S
+            weights = layer.tolist()
+            for weight in weights:
+                s = s + sum(w ** 2 for w in weight[1:])
+        s = (self.reg_param / (2 * n)) * s
+        return s
+
 
     def numerical_gradient_estimation(self, epsilon, instances):
         gradients = []
