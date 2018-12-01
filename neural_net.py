@@ -106,7 +106,7 @@ def chunks(array, size):
 
 class Network:
     def __init__(self, weights, reg_param):
-        self.alpha = 0.5
+        self.alpha = 0.8
         self.reg_param = reg_param
         self.layers = [np.array(w) for w in weights]
         self.activations = []
@@ -138,9 +138,6 @@ class Network:
             self.update_weights()
             after = self.J(instances)
             # print(after)
-            diff = before - after
-            if(diff < 0):
-                print("Aumentou")
             diff = abs(before - after)
             # break
             if diff <= eps:
