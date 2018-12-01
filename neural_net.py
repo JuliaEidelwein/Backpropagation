@@ -123,7 +123,8 @@ class Network:
         # TODO: loop over this to improve network until stop criteria
         n = len(instances)
         # eps = 0.00000005
-        eps = 0.0005
+        eps = 0.001
+        after = 100000
         for _ in range(10000):
             for instance in instances:
                 z, activations = self.activate(instance.data)
@@ -136,13 +137,17 @@ class Network:
             # TODO: calculate error
             self.update_weights()
             after = self.J(instances)
-            print(after)
+            # print(after)
+            diff = before - after
+            if(diff < 0):
+                print("Aumentou")
             diff = abs(before - after)
             # break
             if diff <= eps:
                 break
         # print(instances[-1].result)
         # print(self.activations[-1])
+        return after
 
     def activate(self, values):
         zs = []
@@ -225,7 +230,7 @@ class Network:
             j = j + self.cost(instance.result, output)
         j = j / n_instances
         S = self.calculate_s(n_instances)
-        print(j + S)
+        # print(j + S)
         return j + S
 
     def calculate_s(self, n):

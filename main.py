@@ -16,10 +16,12 @@ weights = nn.network_weights(sys.argv[2])
 dataset = nn.parse_instances(sys.argv[3])
 dataset, max_value, min_value = nn.normalize_dataset(dataset)
 
+print("Rede " + str(nodes_per_layer) + " com lambda " + str(reg_param))
+
 # instance = dataset[1]
 
 
-validation = tt.cross_validation(weights, reg_param, dataset, k=10, r=10)
+validation = tt.cross_validation(weights, reg_param, dataset, k=10)
 print(validation)
 
 # net = nn.Network(weights, reg_param)

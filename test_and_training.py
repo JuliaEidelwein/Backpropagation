@@ -117,6 +117,7 @@ def cross_validation(weights, reg_param, instances, k=10, r=10):
     n_classes = len(classes)
     confusion_matrix = nested_dict(n_classes)
     fmeasures = []
+    Jmean = 0
     for current_fold in folds:
         for c1 in classes:
             for c2 in classes:
@@ -130,7 +131,9 @@ def cross_validation(weights, reg_param, instances, k=10, r=10):
         net = nn.Network(weights, reg_param)
         # TODO: Resolver detalhes do treinamento
         print("Treinando {n} instâncias".format(n=len(training_data)))
-        net.train(training_data)
+        J = net.train(training_data)
+        Jmean = Jmean + J
+        print("J final: " + str(J))
 
         for instance in current_fold:
             prediction = net.predict_class(instance)
@@ -140,6 +143,7 @@ def cross_validation(weights, reg_param, instances, k=10, r=10):
         # TODO: Verificar se está certo isto.
         tp, fp, fn = sum_tp_fp_fn(confusion_matrix)
         fmeasures.append(f_measure(1, tp, fp, fn))
-
+    Jmean = Jmean/k
+    print("J médio é: " + str(Jmean))
     # Retorna a média e o desvio padrão das fmeasures
     return (mean(fmeasures), stdev(fmeasures))
