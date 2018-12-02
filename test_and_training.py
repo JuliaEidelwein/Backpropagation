@@ -141,7 +141,7 @@ def cross_validation(weights, reg_param, instances, k=10, r=10):
             confusion_matrix[instance.klass][prediction] += 1
         Jcv = net.J(current_fold)
         JcvMean = JcvMean + Jcv
-        print("Jcv: " + str(JcvMean))
+        print("Jcv: " + str(Jcv))
         # TODO: Verificar se está certo isto.
         tp, fp, fn = sum_tp_fp_fn(confusion_matrix)
         fmeasures.append(f_measure(1, tp, fp, fn))
