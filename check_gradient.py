@@ -13,6 +13,90 @@ import random
 RANDOM = random.Random(123)
 
 
+def main():
+    if len(sys.argv) < 4:
+        error_message = 'Modo de usar: \n\tpython3 check_gradient.py network.txt initial_weights.txt dataset.txt'
+        print(error_message, file=sys.stderr)
+        sys.exit(1)
+
+    reg_param, nodes_per_layer = nn.network_config(sys.argv[1])
+    weights = nn.network_weights(sys.argv[2])
+    dataset = nn.parse_instances(sys.argv[3])
+
+    net = Network(weights, reg_param)
+
+    print("\nParâmetro de Regularização lambda = {0}".format(reg_param))
+    print("Inicializando rede com estrutura de neurônios por camada: {0}\n".format(
+        nodes_per_layer))
+    for k, layer in enumerate(net.layers):
+        print("Theta {0} inicial".format(k))
+        print(layer)
+        print()
+
+    print("Conjunto de treinamento")
+    for i in dataset:
+        print('x', i.data, 'y', i.result)
+    print()
+
+    for k, instance in enumerate(dataset):
+        Z, A = net.activate(instance.data)
+        print("Processando exemplo de treinamento {}\n".format(k))
+        print("Propagando entrada {}".format(instance.data))
+        for i, (z, a) in enumerate(zip(Z, A[1:])):
+            print('z{}'.format(i), z)
+            print('a{}'.format(i), a)
+        print()
+        print("Saída predita para o exemplo {}: {}".format(k, A[-1][1:]))
+        print("Saída esperada para o exemplo {}: {}".format(k, instance.result))
+        print("J do exemplo {}: {}\n".format(k, net.J(dataset)[1][k]))
+    print("J total do dataset: {}".format(net.J(dataset)[0]))
+
+    print("\nRodando backpropagation\n")
+    for k, instance in enumerate(dataset):
+        net = Network(weights, reg_param)
+        print("Calculando gradientes com base no exemplo {}".format(k))
+        print()
+        zs, A = net.activate(instance.data)
+        deltas = net.calculate_deltas(instance.result, A)
+        print("Deltas")
+        for d in deltas:
+            print(d)
+        print()
+        net.update_gradients(deltas, A)
+        grads = net.gradients
+        for i, g in enumerate(grads):
+            print("Gradientes de theta {}".format(i))
+            print(g)
+            print()
+
+    print("Dataset completo processados. Calculando gradientes regularizados.")
+    print()
+    net = Network(weights, reg_param)
+    for instance in dataset:
+        z, A = net.activate(instance.data)
+        deltas = net.calculate_deltas(instance.result, A)
+        net.update_gradients(deltas, A)
+    net.calculate_regularized_gradients(len(dataset))
+    grads = net.gradients
+    for i, g in enumerate(grads):
+        print("Gradientes de theta {}".format(i))
+        print(g)
+        print()
+
+    print("Verificação numérica de gradientes (eps=0.0000010000)")
+    print()
+    eps = 0.0000010000
+    ngrads = net.numerical_gradient_estimation(eps, dataset)
+    for i, g in enumerate(ngrads):
+        print("Gradientes numérico de theta {}".format(i))
+        print(g)
+        print()
+
+    print("Verificando corretude dos gradientes com base nos gradientes numéricos")
+    for g, ng in zip(grads, ngrads):
+        print(error(ng, g))
+
+
 class Instance(namedtuple('BasicInstance', ('data', 'klass', 'result'))):
     '''Representa as instâncias lidas do dataset.
 
@@ -281,92 +365,5 @@ class Network:
         return output.index(max_value)
 
 
-if len(sys.argv) < 4:
-    error_message = 'Modo de usar: \n\tpython3 main.py network.txt initial_weights.txt dataset.txt'
-    print(error_message, file=sys.stderr)
-    sys.exit(1)
-
-reg_param, nodes_per_layer = nn.network_config(sys.argv[1])
-weights = nn.network_weights(sys.argv[2])
-dataset = nn.parse_instances(sys.argv[3])
-
-net = Network(weights, reg_param)
-
-print()
-print("Parâmetro de Regularização lambda = {0}".format(reg_param))
-print("Inicializando rede com estrutura de neurônios por camada: {0}".format(
-    nodes_per_layer))
-print()
-for k, layer in enumerate(net.layers):
-    print("Theta {0} inicial".format(k))
-    print(layer)
-    print()
-
-print("Conjunto de treinamento")
-for i in dataset:
-    print('x', i.data, 'y', i.result)
-print()
-
-#instance = dataset[0]
-for k, instance in enumerate(dataset):
-    # net = nn.Network(weights, reg_param)
-    Z, A = net.activate(instance.data)
-    print("Processando exemplo de treinamento {}".format(k))
-    print()
-    print("Propagando entrada {}".format(instance.data))
-    for i, (z, a) in enumerate(zip(Z, A[1:])):
-        print('z{}'.format(i), z)
-        print('a{}'.format(i), a)
-    print()
-    print("Saída predita para o exemplo {}: {}".format(k, A[-1][1:]))
-    print("Saída esperada para o exemplo {}: {}".format(k, instance.result))
-    print("J do exemplo {}: {}".format(k, net.J(dataset)[1][k]))
-    print()
-print("J total do dataset: {}".format(net.J(dataset)[0]))
-
-print()
-print("Rodando backpropagation")
-print()
-for k, instance in enumerate(dataset):
-    net = Network(weights, reg_param)
-    print("Calculando gradientes com base no exemplo {}".format(k))
-    print()
-    zs, A = net.activate(instance.data)
-    deltas = net.calculate_deltas(instance.result, A)
-    print("Deltas")
-    for d in deltas:
-        print(d)
-    print()
-    net.update_gradients(deltas, A)
-    grads = net.gradients
-    for i, g in enumerate(grads):
-        print("Gradientes de theta {}".format(i))
-        print(g)
-        print()
-
-print("Dataset completo processados. Calculando gradientes regularizados.")
-print()
-net = Network(weights, reg_param)
-for instance in dataset:
-    z, A = net.activate(instance.data)
-    deltas = net.calculate_deltas(instance.result, A)
-    net.update_gradients(deltas, A)
-net.calculate_regularized_gradients(len(dataset))
-grads = net.gradients
-for i, g in enumerate(grads):
-    print("Gradientes de theta {}".format(i))
-    print(g)
-    print()
-
-print("Verificação numérica de gradientes (eps=0.0000010000)")
-print()
-eps = 0.0000010000
-ngrads = net.numerical_gradient_estimation(eps, dataset)
-for i, g in enumerate(ngrads):
-    print("Gradientes numérico de theta {}".format(i))
-    print(g)
-    print()
-
-print("Verificando corretude dos gradientes com base nos gradientes numéricos")
-for g, ng in zip(grads, ngrads):
-    print(error(ng, g))
+if __name__ == '__main__':
+    main()

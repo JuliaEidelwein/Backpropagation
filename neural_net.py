@@ -15,6 +15,7 @@ class Instance(namedtuple('BasicInstance', ('data', 'klass', 'result'))):
     "data" é a lista de valores de todos os atributos.
     "result" é a lista de valores esperados na saída da rede.
     '''
+
     def __repr__(self):
         data = ', '.join(map(str, self.data))
         result = ', '.join(map(str, self.result))
@@ -89,7 +90,8 @@ def normalize_dataset(dataset):
     for instance in dataset:
         data = tuple(2 * ((x - min_vs[index]) / (max_vs[index] - min_vs[index])) - 1
                      for index, x in enumerate(instance.data))
-        normalized_dataset.append(Instance(data=data, klass=instance.klass, result=instance.result))
+        normalized_dataset.append(
+            Instance(data=data, klass=instance.klass, result=instance.result))
     return (normalized_dataset, max_vs, min_vs)
 
 
@@ -172,7 +174,7 @@ class Network:
         self.deltas.reverse()
         # print("deltas")
         # for d in self.deltas:
-            # print(d)
+        # print(d)
         return self.deltas
 
     def update_gradients(self, deltas, activations):
@@ -184,7 +186,9 @@ class Network:
         num_of_layers = len(self.layers)
         for layer in range(num_of_layers - 1, -1, -1):
             if layer is 0:
-                self.gradients[layer] = self.gradients[layer] + np.transpose(np.asmatrix(deltas[0]))*np.asmatrix(activations[0])
+                self.gradients[layer] = self.gradients[layer] + \
+                    np.transpose(np.asmatrix(
+                        deltas[0]))*np.asmatrix(activations[0])
             else:
                 self.gradients[layer] = self.gradients[layer] + np.transpose(
                     np.asmatrix(deltas[layer]))*(np.asmatrix(activations[layer]))
@@ -239,7 +243,6 @@ class Network:
         s = (self.reg_param / (2 * n)) * s
         return s
 
-
     def numerical_gradient_estimation(self, epsilon, instances):
         gradients = []
         e1 = copy.deepcopy(self)
@@ -267,4 +270,3 @@ class Network:
         output = a[-1][1:].tolist()  # Remove o input do viés
         max_value = max(output)
         return output.index(max_value)
-
