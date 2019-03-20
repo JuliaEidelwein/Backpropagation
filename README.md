@@ -32,3 +32,14 @@ the layers. For the topology above, a valid file would look like the following:
 0.4,0.1,0.5;0.3,0.2,0.4;0.1,0.25,0.7
 0.7,0.5,0.6,0.26
 ```
+
+Using both files given above, the resultant network would look like as the image above. Here, the bias neurons are orange (they are used at every layer, with fixed weight 1, in order to allow a fitting function that does not cross the origin). The remaining neurons at input, hidden and output layer are pink, blue and green, respectively.
+
+![Example Network](https://github.com/JuliaEidelwein/Backpropagation/blob/master/Example_network.png)
+
+Lastly, the dataset must be represented with a line per instance, separating each feature with a comma (**,**). Then, a semicolon (**;**) should be added before the expected value (if there are more than one output, each of them should be separated with commas). The following example has two instances, both with two attributes and one expected value. It matches the network we specified before.
+
+```txt
+10,4;0.3
+12.2,6;0.75
+```
