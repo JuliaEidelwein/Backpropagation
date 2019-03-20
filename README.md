@@ -6,7 +6,7 @@ A neural network made from scratch with Python3 ❤️ 🐍.❤️
 
 ## Running commands
 
-Currently, the command line to call execute this neural network is:
+The command line to execute this neural network is:
 
 ```sh
 /$ python3 main.py network.txt initial_weights.txt dataset.txt
@@ -25,5 +25,10 @@ respectively, excluding the bias neuron.
 1
 ```
 
-And `initial_weights.txt`, as said by its name, gives the initial weights to
-the layers.
+`initial_weights.txt`, as said by its name, gives the initial weights to
+the layers. For the topology above, a valid file would look like the following:
+
+```txt
+0.4,0.1,0.5;0.3,0.2,0.4;0.1,0.25,0.7
+0.7,0.5,0.6,0.26
+```
